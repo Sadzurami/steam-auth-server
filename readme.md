@@ -67,7 +67,7 @@ Creates access token based on refresh token and platform.
 }
 ```
 
-### POST /create/cookie
+### POST /create/cookies
 
 Creates cookies based on refresh token.
 
