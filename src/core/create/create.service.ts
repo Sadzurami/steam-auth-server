@@ -70,6 +70,8 @@ export class CreateService {
       return cookies.join('; ');
     } catch (error) {
       throw new Error('Failed to create cookies');
+    } finally {
+      if (session) session.cancelLoginAttempt();
     }
   }
 
