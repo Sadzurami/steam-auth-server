@@ -11,6 +11,7 @@ import {
   StartLoginSessionWithCredentialsDetails as LoginSessionCredentials,
 } from 'steam-session/dist/interfaces-external';
 import { getAuthCode } from 'steam-totp';
+import { TokensPlatform } from './enums/tokens-platfrom.enum';
 
 @Injectable()
 export class CreateService {
@@ -64,7 +65,7 @@ export class CreateService {
   public async createCookies(dto: CreateCookiesDto) {
     const { refreshToken, proxy } = dto;
 
-    const loginSession = this.createSessionInstance({ proxy, platform: 'web' });
+    const loginSession = this.createSessionInstance({ proxy, platform: TokensPlatform.web });
     loginSession.refreshToken = refreshToken;
 
     try {
@@ -76,7 +77,7 @@ export class CreateService {
     }
   }
 
-  private createSessionInstance(options: { platform?: string; proxy?: string }) {
+  private createSessionInstance(options: { platform?: TokensPlatform; proxy?: string }) {
     try {
       let sessionPlatformType: EAuthTokenPlatformType;
 
