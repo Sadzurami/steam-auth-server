@@ -17,22 +17,14 @@ Clone the repository and install the dependencies:
 ```text
 git clone
 cd steam-auth-server
-
 npm install
-
-// or
-
-yarn install --frozen-lockfile
+npm run build
 ```
 
 ## Usage
 
 ```text
 npm run start:prod
-
-// or
-
-yarn start:prod
 ```
 
 ## Configuration
@@ -50,7 +42,8 @@ Creates a refresh token based on the username, password, platform and optional 2
   "username": "username",
   "password": "password",
   "platform": "web", // one of web, desktop, mobile
-  "code": "optional 2FA code", // only required if 2FA is enabled
+  "guardCode": "optional 2FA code", // only required if 2FA is enabled,
+  "sharedSecret": "optional shared secret", // only required if 2FA is enabled and guardCode is not provided,
   "proxy": "optional proxy url"
 }
 ```
@@ -84,4 +77,4 @@ Returns status 200 and some useful information if the server is running.
 
 ## Requirements
 
-- Node.js 16 or higher
+- Node.js 18 or higher
