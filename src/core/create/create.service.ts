@@ -64,7 +64,7 @@ export class CreateService {
   public async createCookies(dto: CreateCookiesDto) {
     const { refreshToken, proxy } = dto;
 
-    const loginSession = this.createSessionInstance({ proxy });
+    const loginSession = this.createSessionInstance({ proxy, platform: 'web' });
     loginSession.refreshToken = refreshToken;
 
     try {
