@@ -1,77 +1,78 @@
 import pEvent from 'p-event';
 import { EAuthTokenPlatformType, LoginSession } from 'steam-session';
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { CreateAccessTokenDto } from './dto/create-access-token.dto';
 import { CreateCookiesDto } from './dto/create-cookies.dto';
 import { CreateRefreshTokenDto } from './dto/create-refresh-token.dto';
+import {
+  ConstructorOptions as LoginSessionOptions,
+  StartLoginSessionWithCredentialsDetails as LoginSessionCredentials,
+} from 'steam-session/dist/interfaces-external';
+import { getAuthCode } from 'steam-totp';
 
 @Injectable()
 export class CreateService {
-  private readonly logger = new Logger(CreateService.name);
-
   public async createRefreshToken(dto: CreateRefreshTokenDto) {
-    let session: LoginSession;
+    const { username, password, sharedSecret, guardCode, platform, proxy } = dto;
+
+    const loginSession = this.createSessionInstance({ platform, proxy });
+    loginSession.on('error', () => {}); // fallback
 
     try {
-      const { username, password, guardCode, platform, proxy } = dto;
-
-      const credentials = { accountName: username, password } as any;
+      const credentials = { accountName: username, password } as LoginSessionCredentials;
       if (guardCode) credentials.steamGuardCode = guardCode;
+      if (sharedSecret) credentials.steamGuardCode = getAuthCode(sharedSecret);
 
-      session = this.createSessionInstance({ platform, proxy });
+      loginSession
+        .startWithCredentials(credentials)
+        .then((result) => result.actionRequired && loginSession.emit('error', new Error('Guard action required')))
+        .catch((error) => loginSession.emit('error', error));
 
-      const { actionRequired } = await session.startWithCredentials(credentials);
-      if (actionRequired) throw new Error('Guard action required');
+      await pEvent(loginSession, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35000 });
 
-      await pEvent(session, 'authenticated', { rejectionEvents: ['error', 'timeout'] });
-      const refreshToken = session.refreshToken;
+      const refreshToken = loginSession.refreshToken;
+      if (!refreshToken) throw new Error('Refresh token is empty');
 
       return refreshToken;
     } catch (error) {
       throw new Error('Failed to create refresh token');
     } finally {
-      if (session) session.cancelLoginAttempt();
+      loginSession.cancelLoginAttempt();
     }
   }
 
   public async createAccessToken(dto: CreateAccessTokenDto) {
-    let session: LoginSession;
+    const { refreshToken, platform, proxy } = dto;
+
+    const loginSession = this.createSessionInstance({ platform, proxy });
+    loginSession.refreshToken = refreshToken;
 
     try {
-      const { refreshToken, platform, proxy } = dto;
+      await loginSession.refreshAccessToken();
 
-      session = this.createSessionInstance({ platform, proxy });
-      session.refreshToken = refreshToken;
-
-      await session.refreshAccessToken();
-      const accessToken = session.accessToken;
+      const accessToken = loginSession.accessToken;
+      if (!accessToken) throw new Error('Access token is empty');
 
       return accessToken;
     } catch (error) {
       throw new Error('Failed to create access token');
-    } finally {
-      if (session) session.cancelLoginAttempt();
     }
   }
 
   public async createCookies(dto: CreateCookiesDto) {
-    let session: LoginSession;
+    const { refreshToken, proxy } = dto;
+
+    const loginSession = this.createSessionInstance({ proxy });
+    loginSession.refreshToken = refreshToken;
 
     try {
-      const { refreshToken, proxy } = dto;
-
-      session = this.createSessionInstance({ proxy });
-      session.refreshToken = refreshToken;
-
-      const cookies = await session.getWebCookies();
+      const cookies = await loginSession.getWebCookies();
 
       return cookies.join('; ');
     } catch (error) {
       throw new Error('Failed to create cookies');
-    } finally {
-      if (session) session.cancelLoginAttempt();
     }
   }
 
@@ -81,20 +82,21 @@ export class CreateService {
 
       if (options.platform === 'desktop') sessionPlatformType = EAuthTokenPlatformType.SteamClient;
       else if (options.platform === 'mobile') sessionPlatformType = EAuthTokenPlatformType.MobileApp;
-      else sessionPlatformType = EAuthTokenPlatformType.WebBrowser;
+      else if (options.platform === 'web') sessionPlatformType = EAuthTokenPlatformType.WebBrowser;
+      else throw new Error('Invalid platform type');
 
-      const sessionOptions = {} as any;
+      const sessionOptions = {} as LoginSessionOptions;
       if (options.proxy) {
         const proxyType = options.proxy.startsWith('socks') ? 'socksProxy' : 'httpProxy';
         sessionOptions[proxyType] = options.proxy;
       }
 
-      const session = new LoginSession(sessionPlatformType, sessionOptions);
-      session.loginTimeout = 35000;
+      const loginSession = new LoginSession(sessionPlatformType, sessionOptions);
+      loginSession.loginTimeout = 30000;
 
-      return session;
+      return loginSession;
     } catch (error) {
-      throw new Error('Failed to create session instance');
+      throw new Error('Failed to create loginSession instance');
     }
   }
 }
