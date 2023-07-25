@@ -1075,9 +1075,9 @@
   integrity sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==
 
 "@types/node@>=13.7.0":
-  version "20.4.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.4.1.tgz#a6033a8718653c50ac4962977e14d0f984d9527d"
-  integrity sha512-JIzsAvJeA/5iY6Y/OxZbv1lUcc8dNSE77lb2gnBH+/PJ3lFR1Ccvgwl5JWnHAkNHcRsT0TbpVOsiMKZ1F/yyJg==
+  version "20.4.4"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.4.4.tgz#c79c7cc22c9d0e97a7944954c9e663bcbd92b0cb"
+  integrity sha512-CukZhumInROvLq3+b5gLev+vgpsIqC2D0deQr/yS1WnxvmYLlJXZpaQrQiseMY+6xusl79E04UjWoqyr+t1/Ew==
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
@@ -3543,9 +3543,9 @@ kleur@^3.0.3:
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
 kvparser@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/kvparser/-/kvparser-1.0.1.tgz#9cfb3adefbea4c94d5786c497b80103bbfb7723d"
-  integrity sha512-Hih4Cw2gQFMAUB4gbKHTgRr+9ClDGQHbu4q05NiTmgYswt1AaOehvLe0l5AntTmXZS3j2Uw9FnEkLqIG8CuVFA==
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/kvparser/-/kvparser-1.0.2.tgz#1d1cbec693410c3242e49ba667ca6949866fa134"
+  integrity sha512-5P/5qpTAHjVYWqcI55B3yQwSY2FUrYYrJj5i65V1Wmg7/4W4OnBcaodaEvLyVuugeOnS+BAaKm9LbPazGJcRyA==
 
 leven@^3.1.0:
   version "3.1.0"
@@ -4689,10 +4689,10 @@ statuses@2.0.1:
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-2.0.1.tgz#55cb000ccf1d48728bd23c685a063998cf1a1b63"
   integrity sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==
 
-steam-session@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/steam-session/-/steam-session-1.2.4.tgz#441b642f814a320722775363b4df9e539783dda5"
-  integrity sha512-jmpGAygK6dGy/53QotsaBiw6aGCS+9KiM1XxTZ/J/7H1T4+jhszysW22dWeZ8QjEnSec7BsrDvpWEgBzTsqQkw==
+steam-session@^1.2.5:
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/steam-session/-/steam-session-1.2.5.tgz#14d0e32968676c7ea60c2344563418dadb0e0b29"
+  integrity sha512-GeIvyH9jmgMBmIBXmPpdJRLyR3o4gKa98vwxzDW5A7WrDLAF60O38mQ/MV4EhaRUmZS1HMMMTo1cEk+AKEqjjg==
   dependencies:
     "@doctormckay/stdlib" "^2.4.1"
     debug "^4.3.4"
