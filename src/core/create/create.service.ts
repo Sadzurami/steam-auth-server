@@ -38,7 +38,7 @@ export class CreateService {
 
       return refreshToken;
     } catch (error) {
-      throw new Error('Failed to create refresh token');
+      throw new Error(`Failed to create refresh token: ${error.message}`);
     } finally {
       loginSession.cancelLoginAttempt();
     }
@@ -71,7 +71,7 @@ export class CreateService {
 
       return accessToken;
     } catch (error) {
-      throw new Error('Failed to create access token');
+      throw new Error(`Failed to create access token: ${error.message}`);
     }
   }
 
@@ -99,7 +99,7 @@ export class CreateService {
 
       return cookies.join('; ');
     } catch (error) {
-      throw new Error('Failed to create cookies');
+      throw new Error(`Failed to create cookies: ${error.message}`);
     }
   }
 
@@ -123,7 +123,7 @@ export class CreateService {
 
       return loginSession;
     } catch (error) {
-      throw new Error('Failed to create loginSession instance');
+      throw new Error(`Failed to create loginSession instance: ${error.message}`);
     }
   }
 
