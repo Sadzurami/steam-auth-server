@@ -55,7 +55,6 @@ Creates access token based on refresh token and platform.
 ```text
 {
   "refreshToken": "refresh token"
-  "platform": "web", // one of web, desktop, mobile
   "proxy": "optional proxy url"
 }
 ```
