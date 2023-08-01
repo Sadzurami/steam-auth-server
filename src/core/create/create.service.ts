@@ -45,7 +45,20 @@ export class CreateService {
   }
 
   public async createAccessToken(dto: CreateAccessTokenDto) {
-    const { refreshToken, platform, proxy } = dto;
+    const { refreshToken, proxy } = dto;
+
+    const decodedRefreshToken = this.decodeRefreshToken(refreshToken);
+
+    let platform: TokensPlatform;
+    if (decodedRefreshToken.aud.includes('client')) {
+      platform = TokensPlatform.desktop;
+    } else if (decodedRefreshToken.aud.includes('mobile')) {
+      platform = TokensPlatform.mobile;
+    } else if (decodedRefreshToken.aud.includes('web')) {
+      platform = TokensPlatform.web;
+    } else {
+      throw new Error('Unknown token platform type');
+    }
 
     const loginSession = this.createSessionInstance({ platform, proxy });
     loginSession.refreshToken = refreshToken;
@@ -65,7 +78,20 @@ export class CreateService {
   public async createCookies(dto: CreateCookiesDto) {
     const { refreshToken, proxy } = dto;
 
-    const loginSession = this.createSessionInstance({ proxy, platform: TokensPlatform.web });
+    const decodedRefreshToken = this.decodeRefreshToken(refreshToken);
+
+    let platform: TokensPlatform;
+    if (decodedRefreshToken.aud.includes('client')) {
+      platform = TokensPlatform.desktop;
+    } else if (decodedRefreshToken.aud.includes('mobile')) {
+      platform = TokensPlatform.mobile;
+    } else if (decodedRefreshToken.aud.includes('web')) {
+      platform = TokensPlatform.web;
+    } else {
+      throw new Error('Unknown token platform type');
+    }
+
+    const loginSession = this.createSessionInstance({ proxy, platform });
     loginSession.refreshToken = refreshToken;
 
     try {
@@ -99,5 +125,14 @@ export class CreateService {
     } catch (error) {
       throw new Error('Failed to create loginSession instance');
     }
+  }
+
+  private decodeRefreshToken(token: string) {
+    const parts = token.split('.');
+    if (parts.length != 3) throw new Error('Invalid token');
+
+    const standardBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+
+    return JSON.parse(Buffer.from(standardBase64, 'base64').toString('utf8'));
   }
 }
