@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 
 import { CreateService } from './create.service';
 import { CreateAccessTokenDto } from './dto/create-access-token.dto';
@@ -11,19 +11,31 @@ export class CreateController {
 
   @Post('refresh-token')
   @UsePipes(ValidationPipe)
-  public createRefreshToken(@Body() dto: CreateRefreshTokenDto) {
-    return this.createService.createRefreshToken(dto);
+  public async createRefreshToken(@Body() dto: CreateRefreshTokenDto) {
+    try {
+      return await this.createService.createRefreshToken(dto);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 
   @Post('access-token')
   @UsePipes(ValidationPipe)
-  public createAccessToken(@Body() dto: CreateAccessTokenDto) {
-    return this.createService.createAccessToken(dto);
+  public async createAccessToken(@Body() dto: CreateAccessTokenDto) {
+    try {
+      return await this.createService.createAccessToken(dto);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 
   @Post('cookies')
   @UsePipes(ValidationPipe)
-  public createCookies(@Body() dto: CreateCookiesDto) {
-    return this.createService.createCookies(dto);
+  public async createCookies(@Body() dto: CreateCookiesDto) {
+    try {
+      return await this.createService.createCookies(dto);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 }
