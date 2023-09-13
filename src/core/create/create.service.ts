@@ -1,16 +1,15 @@
-import pEvent from 'p-event';
 import { EAuthTokenPlatformType, LoginSession } from 'steam-session';
+import {
+  ConstructorOptions as LoginSessionOptions,
+  StartLoginSessionWithCredentialsDetails as LoginSessionCredentials,
+} from 'steam-session/dist/interfaces-external';
+import SteamTotp from 'steam-totp';
 
 import { Injectable } from '@nestjs/common';
 
 import { CreateAccessTokenDto } from './dto/create-access-token.dto';
 import { CreateCookiesDto } from './dto/create-cookies.dto';
 import { CreateRefreshTokenDto } from './dto/create-refresh-token.dto';
-import {
-  ConstructorOptions as LoginSessionOptions,
-  StartLoginSessionWithCredentialsDetails as LoginSessionCredentials,
-} from 'steam-session/dist/interfaces-external';
-import { getAuthCode } from 'steam-totp';
 import { TokensPlatform } from './enums/tokens-platfrom.enum';
 
 @Injectable()
@@ -18,121 +17,127 @@ export class CreateService {
   public async createRefreshToken(dto: CreateRefreshTokenDto) {
     const { username, password, sharedSecret, guardCode, platform, proxy } = dto;
 
-    const loginSession = this.createSessionInstance({ platform, proxy });
-    loginSession.on('error', () => {}); // fallback
+    const session = this.createSession({ platform, proxy });
+    session.on('error', () => {});
 
-    try {
-      const credentials = { accountName: username, password } as LoginSessionCredentials;
-      if (guardCode) credentials.steamGuardCode = guardCode;
-      if (sharedSecret) credentials.steamGuardCode = getAuthCode(sharedSecret);
+    const credentials: LoginSessionCredentials = { accountName: username, password };
+    if (guardCode) credentials.steamGuardCode = guardCode;
+    if (sharedSecret) credentials.steamGuardCode = SteamTotp.getAuthCode(sharedSecret);
 
-      loginSession
-        .startWithCredentials(credentials)
-        .then((result) => result.actionRequired && loginSession.emit('error', new Error('Guard action required')))
-        .catch((error) => loginSession.emit('error', error));
+    return await new Promise<string>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        session.cancelLoginAttempt();
 
-      await pEvent(loginSession, 'authenticated', { rejectionEvents: ['error', 'timeout'], timeout: 35000 });
+        reject(new Error('Session timed out'));
+      }, 35000);
 
-      const refreshToken = loginSession.refreshToken;
-      if (!refreshToken) throw new Error('Refresh token is empty');
+      session.once('authenticated', () => {
+        session.cancelLoginAttempt();
+        clearTimeout(timeout);
 
-      return refreshToken;
-    } catch (error) {
-      throw new Error(`Failed to create refresh token: ${error.message}`);
-    } finally {
-      loginSession.cancelLoginAttempt();
-    }
+        resolve(session.refreshToken);
+      });
+
+      session.once('error', (error) => {
+        session.cancelLoginAttempt();
+        clearTimeout(timeout);
+
+        reject(new Error('Session error', { cause: error }));
+      });
+
+      session.once('timeout', () => {
+        session.cancelLoginAttempt();
+        clearTimeout(timeout);
+
+        reject(new Error('Session timed out'));
+      });
+
+      session.startWithCredentials(credentials).then((result) => {
+        if (!result.actionRequired) return;
+
+        session.cancelLoginAttempt();
+        clearTimeout(timeout);
+
+        reject(new Error('Session requires guard action'));
+      });
+    });
   }
 
   public async createAccessToken(dto: CreateAccessTokenDto) {
     const { refreshToken, proxy } = dto;
 
-    const decodedRefreshToken = this.decodeRefreshToken(refreshToken);
+    const { aud } = this.decodeRefreshToken(refreshToken);
 
     let platform: TokensPlatform;
-    if (decodedRefreshToken.aud.includes('client')) {
-      platform = TokensPlatform.desktop;
-    } else if (decodedRefreshToken.aud.includes('mobile')) {
-      platform = TokensPlatform.mobile;
-    } else if (decodedRefreshToken.aud.includes('web')) {
-      platform = TokensPlatform.web;
-    } else {
-      throw new Error('Unknown token platform type');
-    }
+    if (aud.includes('client')) platform = TokensPlatform.desktop;
+    else if (aud.includes('mobile')) platform = TokensPlatform.mobile;
+    else if (aud.includes('web')) platform = TokensPlatform.web;
+    else throw new Error('Unknown token platform type');
 
-    const loginSession = this.createSessionInstance({ platform, proxy });
-    loginSession.refreshToken = refreshToken;
+    const session = this.createSession({ platform, proxy });
+    session.refreshToken = refreshToken;
 
-    try {
-      await loginSession.refreshAccessToken();
-
-      const accessToken = loginSession.accessToken;
-      if (!accessToken) throw new Error('Access token is empty');
-
-      return accessToken;
-    } catch (error) {
-      throw new Error(`Failed to create access token: ${error.message}`);
-    }
+    return await session.refreshAccessToken().then(() => session.accessToken);
   }
 
   public async createCookies(dto: CreateCookiesDto) {
     const { refreshToken, proxy } = dto;
 
-    const decodedRefreshToken = this.decodeRefreshToken(refreshToken);
+    const { aud } = this.decodeRefreshToken(refreshToken);
 
     let platform: TokensPlatform;
-    if (decodedRefreshToken.aud.includes('client')) {
-      platform = TokensPlatform.desktop;
-    } else if (decodedRefreshToken.aud.includes('mobile')) {
-      platform = TokensPlatform.mobile;
-    } else if (decodedRefreshToken.aud.includes('web')) {
-      platform = TokensPlatform.web;
-    } else {
-      throw new Error('Unknown token platform type');
-    }
+    if (aud.includes('client')) platform = TokensPlatform.desktop;
+    else if (aud.includes('mobile')) platform = TokensPlatform.mobile;
+    else if (aud.includes('web')) platform = TokensPlatform.web;
+    else throw new Error('Unknown token platform type');
 
-    const loginSession = this.createSessionInstance({ proxy, platform });
-    loginSession.refreshToken = refreshToken;
+    const session = this.createSession({ platform, proxy });
+    session.refreshToken = refreshToken;
 
-    try {
-      const cookies = await loginSession.getWebCookies();
-
-      return cookies.join('; ');
-    } catch (error) {
-      throw new Error(`Failed to create cookies: ${error.message}`);
-    }
+    return await session.getWebCookies().then((cookies) => cookies.join('; '));
   }
 
-  private createSessionInstance(options: { platform?: TokensPlatform; proxy?: string }) {
-    try {
-      let sessionPlatformType: EAuthTokenPlatformType;
+  private createSession(options: { platform?: TokensPlatform; proxy?: string }) {
+    const { platform = TokensPlatform.web, proxy } = options;
 
-      if (options.platform === 'desktop') sessionPlatformType = EAuthTokenPlatformType.SteamClient;
-      else if (options.platform === 'mobile') sessionPlatformType = EAuthTokenPlatformType.MobileApp;
-      else if (options.platform === 'web') sessionPlatformType = EAuthTokenPlatformType.WebBrowser;
-      else throw new Error('Invalid platform type');
-
-      const sessionOptions = {} as LoginSessionOptions;
-      if (options.proxy) {
-        const proxyType = options.proxy.startsWith('socks') ? 'socksProxy' : 'httpProxy';
-        sessionOptions[proxyType] = options.proxy;
-      }
-
-      const loginSession = new LoginSession(sessionPlatformType, sessionOptions);
-      loginSession.loginTimeout = 30000;
-
-      return loginSession;
-    } catch (error) {
-      throw new Error(`Failed to create loginSession instance: ${error.message}`);
+    let platformType: EAuthTokenPlatformType;
+    switch (platform) {
+      case TokensPlatform.web:
+        platformType = EAuthTokenPlatformType.WebBrowser;
+        break;
+      case TokensPlatform.mobile:
+        platformType = EAuthTokenPlatformType.MobileApp;
+        break;
+      case TokensPlatform.desktop:
+        platformType = EAuthTokenPlatformType.SteamClient;
+        break;
     }
+
+    const sessionOptions: LoginSessionOptions = {};
+
+    if (proxy) {
+      const proxyType = proxy.startsWith('socks') ? 'socksProxy' : 'httpProxy';
+      options[proxyType] = proxy;
+    }
+
+    const session = new LoginSession(platformType, sessionOptions);
+    session.loginTimeout = 30000;
+
+    return session;
   }
 
   private decodeRefreshToken(token: string) {
-    const parts = token.split('.');
-    if (parts.length != 3) throw new Error('Invalid token');
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) throw new Error('Token must have 3 parts');
 
-    const standardBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payloadString = Buffer.from(payloadBase64, 'base64').toString('utf-8');
+      const payloadJson = JSON.parse(payloadString);
 
-    return JSON.parse(Buffer.from(standardBase64, 'base64').toString('utf8'));
+      return payloadJson;
+    } catch (error) {
+      throw new Error('Failed to decode refresh token', { cause: error });
+    }
   }
 }
