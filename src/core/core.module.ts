@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 
 import { CreateModule } from './create/create.module';
-import { HealthModule } from './health/health.module';
+import { StatusModule } from './status/status.module';
 
 @Module({
-  imports: [CreateModule, HealthModule],
+  imports: [CreateModule, StatusModule],
 })
 export class CoreModule {}
