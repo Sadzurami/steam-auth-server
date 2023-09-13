@@ -70,7 +70,7 @@ Creates cookies based on refresh token.
 }
 ```
 
-### GET /health
+### GET /status
 
 Returns status 200 and some useful information if the server is running.
 
