@@ -52,14 +52,17 @@ export class CreateService {
         reject(new Error('Session timed out'));
       });
 
-      session.startWithCredentials(credentials).then((result) => {
-        if (!result.actionRequired) return;
+      session
+        .startWithCredentials(credentials)
+        .then((result) => {
+          if (!result.actionRequired) return;
 
-        session.cancelLoginAttempt();
-        clearTimeout(timeout);
+          session.cancelLoginAttempt();
+          clearTimeout(timeout);
 
-        reject(new Error('Session requires guard action'));
-      });
+          reject(new Error('Session requires guard action'));
+        })
+        .catch((error) => reject(error));
     });
   }
 
