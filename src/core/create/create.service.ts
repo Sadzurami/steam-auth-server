@@ -120,7 +120,7 @@ export class CreateService {
 
     if (proxy) {
       const proxyType = proxy.startsWith('socks') ? 'socksProxy' : 'httpProxy';
-      options[proxyType] = proxy;
+      sessionOptions[proxyType] = proxy;
     }
 
     const session = new LoginSession(platformType, sessionOptions);
