@@ -6,6 +6,7 @@ import {
 import SteamTotp from 'steam-totp';
 
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { CreateAccessTokenDto } from './dto/create-access-token.dto';
 import { CreateCookiesDto } from './dto/create-cookies.dto';
@@ -14,8 +15,12 @@ import { TokensPlatform } from './enums/tokens-platfrom.enum';
 
 @Injectable()
 export class CreateService {
+  constructor(private readonly config: ConfigService) {}
+
   public async createRefreshToken(dto: CreateRefreshTokenDto) {
     const { username, password, sharedSecret, guardCode, platform, proxy } = dto;
+
+    if (!proxy && this.config.get('STRICT_PROXY') === 'true') throw new Error('Proxy is required');
 
     const session = this.createSession({ platform, proxy });
     session.on('error', () => {});
@@ -69,6 +74,8 @@ export class CreateService {
   public async createAccessToken(dto: CreateAccessTokenDto) {
     const { refreshToken, proxy } = dto;
 
+    if (!proxy && this.config.get('STRICT_PROXY') === 'true') throw new Error('Proxy is required');
+
     const { aud } = this.decodeRefreshToken(refreshToken);
 
     let platform: TokensPlatform;
@@ -85,6 +92,8 @@ export class CreateService {
 
   public async createCookies(dto: CreateCookiesDto) {
     const { refreshToken, proxy } = dto;
+
+    if (!proxy && this.config.get('STRICT_PROXY') === 'true') throw new Error('Proxy is required');
 
     const { aud } = this.decodeRefreshToken(refreshToken);
 
