@@ -12,6 +12,7 @@ import { CreateAccessTokenDto } from './dto/create-access-token.dto';
 import { CreateCookiesDto } from './dto/create-cookies.dto';
 import { CreateRefreshTokenDto } from './dto/create-refresh-token.dto';
 import { TokensPlatform } from './enums/tokens-platfrom.enum';
+import { createMachineName } from './helpers';
 
 @Injectable()
 export class CreateService {
@@ -22,7 +23,7 @@ export class CreateService {
 
     if (!proxy && this.config.get('STRICT_PROXY') === 'true') throw new Error('Proxy is required');
 
-    const session = this.createSession({ platform, proxy });
+    const session = this.createSession({ identifier: username, platform, proxy });
     session.on('error', () => {});
 
     const credentials: LoginSessionCredentials = { accountName: username, password };
@@ -109,8 +110,10 @@ export class CreateService {
     return await session.getWebCookies().then((cookies) => cookies.join('; '));
   }
 
-  private createSession(options: { platform?: TokensPlatform; proxy?: string }) {
-    const { platform = TokensPlatform.web, proxy } = options;
+  private createSession(options: { identifier?: string; platform?: TokensPlatform; proxy?: string }) {
+    const { identifier, platform = TokensPlatform.web, proxy } = options;
+
+    const sessionOptions: LoginSessionOptions = {};
 
     let platformType: EAuthTokenPlatformType;
     switch (platform) {
@@ -122,10 +125,10 @@ export class CreateService {
         break;
       case TokensPlatform.desktop:
         platformType = EAuthTokenPlatformType.SteamClient;
+        sessionOptions.machineId = true;
+        sessionOptions.machineFriendlyName = createMachineName(identifier);
         break;
     }
-
-    const sessionOptions: LoginSessionOptions = {};
 
     if (proxy) {
       const proxyType = proxy.startsWith('socks') ? 'socksProxy' : 'httpProxy';
