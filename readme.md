@@ -30,7 +30,15 @@ yarn run start:prod
 
 ## Configuration
 
-Only the port can be changed. To change it, set the PORT environment variable or change the port property in the .env file.
+`.env`
+
+```text
+PORT=3000
+STRICT_PROXY=false
+```
+
+- `PORT`: The port the server will listen on
+- `STRICT_PROXY`: If set to true and proxy is not provided in the request, the server will return an error
 
 ## Endpoints
 
