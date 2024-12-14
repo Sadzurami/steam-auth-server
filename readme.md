@@ -17,14 +17,15 @@ Clone the repository and install the dependencies:
 ```text
 git clone
 cd steam-auth-server
-npm install
-npm run build
+
+yarn install
+yarn run build
 ```
 
 ## Usage
 
 ```text
-npm run start:prod
+yarn run start:prod
 ```
 
 ## Configuration
