@@ -107,7 +107,7 @@ export class CreateService {
     const session = this.createSession({ platform, proxy });
     session.refreshToken = refreshToken;
 
-    return await session.getWebCookies().then((cookies) => cookies.join('; '));
+    return await session.getWebCookies();
   }
 
   private createSession(options: { identifier?: string; platform?: TokensPlatform; proxy?: string }) {
