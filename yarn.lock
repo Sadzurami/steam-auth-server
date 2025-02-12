@@ -3174,10 +3174,10 @@ statuses@2.0.1:
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-2.0.1.tgz#55cb000ccf1d48728bd23c685a063998cf1a1b63"
   integrity sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==
 
-steam-session@^1.9.0:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/steam-session/-/steam-session-1.9.0.tgz#a0c511dfbdad0ca8225cd809130504cbfed15e59"
-  integrity sha512-CsCxy2ln70/LrRcho8nbixTLT2RMswqt/kzUualZYeT7DkTUF7nni8G/f1tBdT6ce2lKzl4Hq5xJlQ8C6rxg9A==
+steam-session@^1.9.1:
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/steam-session/-/steam-session-1.9.1.tgz#ee6f14c48b12b3e57bed0c1b1678b5e0db796267"
+  integrity sha512-BMHEuEnu9BcG5mGbcOSdKzkILS9r4zSO2oTFL+VNyPEr4PiwL332t41oSFN4om/6vo2ToS4cvEN1BkHaIfGUPw==
   dependencies:
     "@doctormckay/stdlib" "^2.9.0"
     "@doctormckay/user-agents" "^1.0.0"
