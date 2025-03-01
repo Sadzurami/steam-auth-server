@@ -1,4 +1,4 @@
-import { IsJWT, IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsJWT, IsOptional, IsString } from 'class-validator';
 
 export class CreateCookiesDto {
   @IsString()
@@ -7,6 +7,5 @@ export class CreateCookiesDto {
 
   @IsOptional()
   @IsString()
-  @IsUrl()
   proxy?: string;
 }

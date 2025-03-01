@@ -1,4 +1,4 @@
-import { IsBase64, IsEnum, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
+import { IsBase64, IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { TokensPlatform } from '../enums/tokens-platfrom.enum';
 
@@ -30,6 +30,5 @@ export class CreateRefreshTokenDto {
 
   @IsOptional()
   @IsString()
-  @IsUrl()
   proxy?: string;
 }
